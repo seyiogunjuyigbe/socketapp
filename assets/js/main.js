@@ -14,6 +14,7 @@ const base_url = "http://localhost:3000"
 const socket = io(base_url + "/messenger");
 let onlineUsers = []
 let isTyping = false;
+let token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiOCIsImlhdCI6MTYyMDY1Mzk3MCwiZXhwIjoxNzA3MDUzOTcwfQ.GScL8tR5GW4_p7LmYub1R61lstBWvZqXTTNlTb_jiws"
 getUsers()
   .catch(e => console.log(e))
 // Start Chat
@@ -100,7 +101,8 @@ async function getUsers() {
     let resp = await fetch(`${base_url}/api/v1/users`, {
       headers: {
         'Accept': 'application/json',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
       method: "GET",
     })

@@ -39,6 +39,8 @@
 		const createForm = document.querySelector("#create-form");
 		let action = document.querySelector("#action");
 		let user;
+		let token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiOCIsImlhdCI6MTYyMDY1Mzk3MCwiZXhwIjoxNzA3MDUzOTcwfQ.GScL8tR5GW4_p7LmYub1R61lstBWvZqXTTNlTb_jiws"
+
 		createForm.addEventListener("submit", async (e) => {
 			try {
 				e.preventDefault();
@@ -77,7 +79,9 @@
 				let resp = await fetch(`${base_url}/api/v1/users/create`, {
 					headers: {
 						'Accept': 'application/json',
-						'Content-Type': 'application/json'
+						'Content-Type': 'application/json',
+						'Authorization': `Bearer ${token}`
+
 					},
 					method: "POST",
 					body: JSON.stringify(payload)
@@ -100,7 +104,9 @@
 				let resp = await fetch(`${base_url}/api/v1/users/username/${username}`, {
 					headers: {
 						'Accept': 'application/json',
-						'Content-Type': 'application/json'
+						'Content-Type': 'application/json',
+						'Authorization': `Bearer ${token}`
+
 					},
 					method: "GET",
 				})
