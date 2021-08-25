@@ -2,23 +2,27 @@ const chatForm = document.getElementById('chat-form');
 const chatMessages = document.querySelector('.chat-messages');
 const roomName = document.getElementById('room-name');
 const userList = document.getElementById('users');
-const onlineStatus = document.querySelector("#online-status")
+const onlineStatus = document.querySelector("#online-status");
+const typingStatus = document.querySelector("#typing-status");
+
+const messageInput = document.querySelector("#msg");
 // Get username and room from URL
 var { from_id, to_id } = Qs.parse(location.search, {
   ignoreQueryPrefix: true,
 });
 const base_url = "http://localhost:3000"
 const socket = io(base_url + "/messenger");
-
+let onlineUsers = []
+let isTyping = false;
 getUsers()
   .catch(e => console.log(e))
 // Start Chat
 
-socket.emit("online", to_id)
+socket.emit("online", from_id)
 
 // Message from server
 socket.on('newMessage', (data) => {
-  console.log({ data });
+  console.log("message received");
   outputMessage(data);
 
   // Scroll down
@@ -27,7 +31,8 @@ socket.on('newMessage', (data) => {
 
 // Message submit
 chatForm.addEventListener('submit', (e) => {
-  console.log("sending")
+  console.log("sending");
+
 
   e.preventDefault();
 
@@ -50,15 +55,29 @@ chatForm.addEventListener('submit', (e) => {
   e.target.elements.msg.focus();
 });
 
+messageInput.addEventListener("input", (e) => {
+  socket.emit("typing", { to_id })
+})
+socket.on("typing", data => {
+  isTyping = true;
+  updateTyping(data.from_id);
+  console.log({ data })
+})
+function updateTyping(id = "user") {
+
+  onlineStatus.textContent = isTyping ? `${id} is typing...` : ""
+}
 // Output message to DOM
 function outputMessage(data) {
+  isTyping = false
+  updateTyping()
   let { from_id, message } = data
   const div = document.createElement('div');
   div.classList.add('message');
-  const p = document.createElement('p');
-  p.classList.add('meta');
-  p.innerText = from_id;
-  div.appendChild(p);
+  // const p = document.createElement('p');
+  // p.classList.add('meta');
+  // p.innerText = from_id;
+  // div.appendChild(p);
   const para = document.createElement('p');
   para.classList.add('text');
   para.innerText = message;
@@ -66,21 +85,6 @@ function outputMessage(data) {
   document.querySelector('.chat-messages').appendChild(div);
 }
 
-// Add room name to DOM
-function outputRoomName(room) {
-  roomName.innerText = room;
-}
-
-// Add users to DOM
-function outputUsers(users) {
-  userList.innerHTML = '';
-  users.forEach((user) => {
-    const option = document.createElement('option');
-    option.innerText = user.username;
-    option.setAttribute("value", user.id)
-    userList.appendChild(option);
-  });
-}
 
 //Prompt the user before leave chat room
 document.getElementById('leave-btn').addEventListener('click', () => {
@@ -103,7 +107,6 @@ async function getUsers() {
     let usersArr = await resp.json();
     if (usersArr && Array.isArray(usersArr)) {
       usersArr.forEach(user => {
-        console.log(user.username, user.first_name)
         const button = document.createElement("button")
         button.textContent = `${user.first_name} ${user.last_name}`;
         button.setAttribute("data_", user.id);
@@ -124,6 +127,8 @@ async function getUsers() {
 
 const startChat = (e) => {
   to_id = e.getAttribute("data_");
+  clearMessages()
+
   document.querySelectorAll(".active").forEach(el => {
     el.classList.remove("active")
   })
@@ -134,8 +139,27 @@ const startChat = (e) => {
   // window.location = `${location.href}&to_id=${id}`
 }
 socket.on("onlineStatus", data => {
-  setOnlineStatus(data.status)
-})
-function setOnlineStatus(status = "offline") {
-  onlineStatus.textContent = status;
+  let user = onlineUsers.find(u => {
+    return u.user_id == data.user_id
+  });
+  if (user) {
+    onlineUsers[onlineUsers.indexOf(user)].status = data.status
+  } else {
+    onlineUsers.push(data)
+  }
+  setOnlineStatus(onlineUsers)
+});
+function setOnlineStatus(onlineUsers) {
+  onlineStatus.innerHTML = ""
+  onlineUsers.forEach(user => {
+    if (user.user_id != from_id) {
+      onlineStatus.innerHTML += `<br><span>${user.user_id} ${user.status}</span>`;
+    }
+
+  })
+
+}
+
+function clearMessages() {
+  document.querySelector('.chat-messages').innerHTML = ""
 }
