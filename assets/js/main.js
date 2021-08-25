@@ -110,8 +110,8 @@ async function getUsers() {
     if (usersArr && Array.isArray(usersArr)) {
       usersArr.forEach(user => {
         const button = document.createElement("button")
-        button.textContent = `${user.first_name} ${user.last_name}`;
-        button.setAttribute("data_", user.id);
+        button.textContent = `${user.dataValues.first_name} ${user.dataValues.last_name}`;
+        button.setAttribute("data_", user.dataValues.id);
         button.setAttribute("onclick", "startChat(this)");
         button.classList.add("btn")
         button.classList.add("user")

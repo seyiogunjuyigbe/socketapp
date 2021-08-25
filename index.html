@@ -21,7 +21,7 @@
 			<form id="create-form">
 				<div class="form-control">
 					<label for="username">Your Username</label>
-					<input type="text" name="username" id="username" placeholder="Enter username..." required />
+					<input type="text" name="username" id="username" placeholder="Enter username..." required>
 				</div>
 				<button type="submit" id="signup" class="btn">Join Chat</button>
 			</form>
@@ -44,14 +44,15 @@
 		createForm.addEventListener("submit", async (e) => {
 			try {
 				e.preventDefault();
-				user = await checkUser(e.target.elements.username.value);
+				action.textContent = "Loading..."
+				let username = e.target.elements.username.value
+				user = await checkUser(username);
+				console.log({ user });
 				if (!user) {
-					user = await createUser(e.target.elements.username.value);
+					user = await createUser(username);
 				}
 				if (user) {
-
 					location.href = `${location.origin}/chat.html?username=${user.username}&from_id=${user.id}`
-
 				}
 			} catch (error) {
 				console.log(error)
@@ -61,7 +62,6 @@
 		})
 
 		async function createUser(username) {
-			action.textContent = "Loading..."
 			try {
 				let payload = {
 					first_name: username,
@@ -114,7 +114,8 @@
 				if (!Object.keys(r).length) return null;
 				else {
 					action.textContent = `Signed in as ${r.username}`
-					return { username: r.username, id: r.id }
+					let user = r.dataValues;
+					return { username: user.username, id: user.id }
 				}
 			}
 			catch (e) {
