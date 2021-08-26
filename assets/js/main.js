@@ -87,13 +87,13 @@ function updateTyping(id = "user") {
 function outputMessage(data) {
   isTyping = false
   updateTyping()
-  let { from_id, message } = data
+  let { message } = data
   const div = document.createElement('div');
   div.classList.add('message');
-  // const p = document.createElement('p');
-  // p.classList.add('meta');
-  // p.innerText = from_id;
-  // div.appendChild(p);
+  const p = document.createElement('p');
+  p.classList.add('meta');
+  p.innerText = data.from_id == from_id ? "Me" : data.from_id;
+  div.appendChild(p);
   const para = document.createElement('p');
   para.classList.add('text');
   para.innerText = message;
@@ -195,7 +195,12 @@ function addUsersToGroupChat() {
       users.push(box.value)
     }
   })
-  socket.emit("joinGroupChat", users)
+  if (users.length < 3) {
+    alert("You need at least 3 people to start a group chat. Use the checkboxes")
+  } else {
+    socket.emit("joinGroupChat", users)
+
+  }
 }
 const startGroupChat = (e) => {
   room = e.getAttribute("data_");
