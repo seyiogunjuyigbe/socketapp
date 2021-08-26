@@ -31,12 +31,12 @@ a {
 
 .btn {
 	cursor: pointer;
-	padding: 5px 15px;
+	padding: 5px 10px;
 	background: var(--light-color);
 	color: var(--dark-color-a);
 	border: 0;
-	font-size: 17px;
-	margin: 0.4em;
+	font-size: 11px;
+	margin: 0.3em;
 }
 
 /* Chat Page */
@@ -191,4 +191,9 @@ a {
 }
 .active{
 	background-color: #5cb85c;
+}
+.danger{
+	color:rgba(0, 0, 0);
+	margin-top: 3em;
+	background-color: red;
 }

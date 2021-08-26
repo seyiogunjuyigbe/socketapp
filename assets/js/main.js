@@ -4,12 +4,15 @@ const roomName = document.getElementById('room-name');
 const userList = document.getElementById('users');
 const onlineStatus = document.querySelector("#online-status");
 const typingStatus = document.querySelector("#typing-status");
-
+const selectGroup = document.getElementById("select-group")
 const messageInput = document.querySelector("#msg");
+const groupChoose = document.getElementById("groupChoose")
 // Get username and room from URL
 var { from_id, to_id } = Qs.parse(location.search, {
   ignoreQueryPrefix: true,
 });
+var chat = "private";
+var room;
 const base_url = "http://localhost:3000"
 const socket = io(base_url + "/messenger");
 let onlineUsers = []
@@ -29,7 +32,13 @@ socket.on('newMessage', (data) => {
   // Scroll down
   chatMessages.scrollTop = chatMessages.scrollHeight;
 });
-
+socket.on('newGroupMessage', (data) => {
+  console.log("group message received");
+  outputMessage(data);
+  room = data.room
+  // Scroll down
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+});
 // Message submit
 chatForm.addEventListener('submit', (e) => {
   console.log("sending");
@@ -45,11 +54,17 @@ chatForm.addEventListener('submit', (e) => {
   if (!msg) {
     return false;
   }
+  if (chat === "private") {
+    // Emit message to server
+    socket.emit("newMessage", {
+      to_id, message: msg
+    });
+  } else {
+    socket.emit("newGroupMessage", {
+      from_id, message: msg, room
+    });
+  }
 
-  // Emit message to server
-  socket.emit("newMessage", {
-    to_id, message: msg
-  });
 
   // Clear input
   e.target.elements.msg.value = '';
@@ -110,17 +125,28 @@ async function getUsers() {
     if (usersArr && Array.isArray(usersArr)) {
       usersArr.forEach(user => {
         const button = document.createElement("button")
+        const checkBox = document.createElement("input")
         button.textContent = `${user.dataValues.first_name} ${user.dataValues.last_name}`;
         button.setAttribute("data_", user.dataValues.id);
         button.setAttribute("onclick", "startChat(this)");
         button.classList.add("btn")
         button.classList.add("user")
-        userList.appendChild(button)
-      })
+        checkBox.setAttribute("value", user.dataValues.id);
+        checkBox.setAttribute("type", "checkbox");
+        checkBox.setAttribute("class", "checkbox");
+        userList.appendChild(button);
+        userList.appendChild(checkBox);
+      });
+      const goButton = document.createElement("button")
+      goButton.textContent = `Start Group Chat`;
+      goButton.setAttribute("id", "create-group");
+      goButton.classList.add("btn");
+      goButton.classList.add("danger");
+      goButton.setAttribute("onclick", "addUsersToGroupChat()")
+      userList.appendChild(goButton);
     } else {
       console.log("an error occured fetching users")
     }
-    // return { username: r.username, id: r.id }
   }
   catch (e) {
     console.log(e)
@@ -136,9 +162,6 @@ const startChat = (e) => {
   })
   e.classList.add("active");
   socket.emit('initPrivateChat', { from_id, to_id });
-
-
-  // window.location = `${location.href}&to_id=${id}`
 }
 socket.on("onlineStatus", data => {
   let user = onlineUsers.find(u => {
@@ -157,11 +180,52 @@ function setOnlineStatus(onlineUsers) {
     if (user.user_id != from_id) {
       onlineStatus.innerHTML += `<br><span>${user.user_id} ${user.status}</span>`;
     }
-
   })
-
 }
 
 function clearMessages() {
   document.querySelector('.chat-messages').innerHTML = ""
 }
+
+function addUsersToGroupChat() {
+  let checkBoxes = document.querySelectorAll(".checkbox");
+  let users = [from_id];
+  checkBoxes.forEach(box => {
+    if (box.checked && !users.includes(box.value)) {
+      users.push(box.value)
+    }
+  })
+  socket.emit("joinGroupChat", users)
+}
+const startGroupChat = (e) => {
+  room = e.getAttribute("data_");
+  clearMessages()
+
+  document.querySelectorAll(".active").forEach(el => {
+    el.classList.remove("active")
+  })
+  e.classList.add("active");
+  chat = "room"
+  // socket.emit('newGroupMessage', { from_id, to_id });
+}
+
+socket.on("joinGroupChat", data => {
+  console.log("group chat begins");
+  socket.emit("joinRoom", (data.room, data))
+})
+socket.on("groupChat", data => {
+  console.log("group chat received");
+  console.log({ data })
+  let existingBtn = document.getElementById(data.room);
+  if (!existingBtn) {
+    const button = document.createElement("button")
+    button.textContent = `Room ${data.room}`;
+    button.setAttribute("data_", data.room);
+    button.setAttribute("id", data.room);
+    button.setAttribute("onclick", "startGroupChat(this)");
+    button.classList.add("btn");
+    userList.appendChild(button);
+  }
+
+  room = data.room;
+})
