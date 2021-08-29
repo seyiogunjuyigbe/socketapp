@@ -114,7 +114,7 @@
 				if (!Object.keys(r).length) return null;
 				else {
 					action.textContent = `Signed in as ${r.username}`
-					let user = r.dataValues;
+					let user = r;
 					return { username: user.username, id: user.id }
 				}
 			}

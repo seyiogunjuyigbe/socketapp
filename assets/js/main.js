@@ -6,7 +6,9 @@ const onlineStatus = document.querySelector("#online-status");
 const typingStatus = document.querySelector("#typing-status");
 const selectGroup = document.getElementById("select-group")
 const messageInput = document.querySelector("#msg");
-const groupChoose = document.getElementById("groupChoose")
+const groupChoose = document.getElementById("groupChoose");
+const roomList = document.getElementById('rooms');
+
 // Get username and room from URL
 var { from_id, to_id } = Qs.parse(location.search, {
   ignoreQueryPrefix: true,
@@ -126,12 +128,12 @@ async function getUsers() {
       usersArr.forEach(user => {
         const button = document.createElement("button")
         const checkBox = document.createElement("input")
-        button.textContent = `${user.dataValues.first_name} ${user.dataValues.last_name}`;
-        button.setAttribute("data_", user.dataValues.id);
+        button.textContent = `${user.first_name} ${user.last_name}`;
+        button.setAttribute("data_", user.id);
         button.setAttribute("onclick", "startChat(this)");
         button.classList.add("btn")
         button.classList.add("user")
-        checkBox.setAttribute("value", user.dataValues.id);
+        checkBox.setAttribute("value", user.id);
         checkBox.setAttribute("type", "checkbox");
         checkBox.setAttribute("class", "checkbox");
         userList.appendChild(button);
@@ -213,6 +215,26 @@ const startGroupChat = (e) => {
   chat = "room"
   // socket.emit('newGroupMessage', { from_id, to_id });
 }
+socket.on("rooms", rooms => {
+  if (rooms && rooms.length && Array.isArray(rooms)) {
+    rooms.forEach(room => {
+      let existingBtn = document.getElementById(room.room_id);
+      if (!existingBtn) {
+        const button = document.createElement("button")
+        button.textContent = `Room ${room.room_id}`;
+        button.setAttribute("data_", room.room_id);
+        button.setAttribute("id", room.room_id);
+        button.setAttribute("onclick", "startGroupChat(this)");
+        button.classList.add("btn");
+        roomList.appendChild(button);
+        roomList.appendChild(document.createElement("br"))
+      }
+    })
+
+  }
+
+
+})
 
 socket.on("joinGroupChat", data => {
   console.log("group chat begins");
@@ -229,7 +251,8 @@ socket.on("groupChat", data => {
     button.setAttribute("id", data.room);
     button.setAttribute("onclick", "startGroupChat(this)");
     button.classList.add("btn");
-    userList.appendChild(button);
+    roomList.appendChild(button);
+    roomList.appendChild(document.createElement("br"))
   }
 
   room = data.room;
