@@ -230,10 +230,7 @@ socket.on("rooms", rooms => {
         roomList.appendChild(document.createElement("br"))
       }
     })
-
   }
-
-
 })
 
 socket.on("joinGroupChat", data => {
