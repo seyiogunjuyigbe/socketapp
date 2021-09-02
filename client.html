@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <form id="eventform" autocomplete="off" style="margin-left: 2em;">
+        <select name="event" id="event" required>
+            <option value="">Select Event</option>
+            <option value="online">online</option>
+            <option value="typing">typing</option>
+            <option value="initPrivateChat">initPrivateChat</option>
+            <option value="newMessage">newMessage</option>
+            <option value="newGroupMessage">newGroupMessage</option>
+            <option value="initGroupChat">initGroupChat</option>
+            <option value="joinRoom">joinRoom</option>
+            <option value="readMessages">readMessages</option>
+        </select><br><br>
+        <label for="from_id">from_id </label><input type="text" name="from_id" placeholder="from_id"
+            id="from_id"><br><br>
+        <label for="to_id">to_id </label><input type="text" name="to_id" placeholder="to_id" id="to_id"><br><br>
+        <label for="message">message </label><input type="text" name="message" placeholder="message"
+            id="message"><br><br>
+        <label for="room">room </label><input type="text" name="room" placeholder="room" id="room"><br><br>
+        <label for="status">status </label><input type="text" name="status" placeholder="status" id="status"><br><br>
+        <label for="data">data</label><input type="text" name="data" placeholder="data" id="data"><br><br>
+
+        <select name="type" id="type" required>
+            <option value="">Select</option>
+            <option value="text">Text</option>
+            <option value="json">JSON</option>
+        </select><br><br>
+        <button type="submit">Send</button>
+
+    </form>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.3/socket.io.js"
+        integrity="sha512-PU5S6BA03fRv1Q5fpwXjg5nlRrgdoguZ74urFInkbABMCENyx5oP3hrDzYMMPh3qdLdknIvrGj3yqZ4JuU7Nag=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+
+        const socket = io("http://localhost:3000/messenger");
+        const eventform = document.querySelector("#eventform");
+        eventform.addEventListener("submit", (e) => {
+            let thisEvent = e.target.elements.event.value;
+
+            e.preventDefault();
+            let data;
+            if (e.target.elements.type.value === "text") {
+                data = e.target.elements.data.value;
+            } else {
+                const formToJSON = elements => [].reduce.call(elements, (d, element) => {
+                    if (element.name.split(".").length > 1) {
+                        let k = element.name.split(".")[0];
+                        let v = element.name.split(".")[1];
+
+                        if (!d[k]) {
+                            d[k] = {}
+                        }
+                        d[k][v] = element.value
+                    } else {
+                        d[element.name] = element.value;
+                    }
+                    return d;
+                }, {});
+                data = formToJSON(e.target.elements);
+                Object.keys(data).forEach(el => {
+                    if (data[el] === "" || !data[el]) {
+                        delete data[el]
+                    }
+                })
+            }
+            socket.emit(thisEvent, data)
+            console.log({ type: e.target.elements.type.value, data })
+
+
+        })
+
+        socket.on("rooms", data => {
+            console.log(`******* New Event Received at ${new Date().toLocaleTimeString()} *******`)
+            console.log({ event: "rooms", data })
+        })
+        socket.on("onlineStatus", data => {
+            console.log(`******* New Event Received at ${new Date().toLocaleTimeString()} *******`)
+            console.log({ event: "onlineStatus", data })
+        })
+        socket.on("newMessage", data => {
+            console.log(`******* New Event Received at ${new Date().toLocaleTimeString()} *******`)
+            console.log({ event: "newMessage", data })
+        })
+        socket.on("groupChat", data => {
+            console.log(`******* New Event Received at ${new Date().toLocaleTimeString()} *******`)
+            console.log({ event: "groupChat", data })
+        })
+        socket.on("socketError", data => {
+            console.log(`******* New Event Received at ${new Date().toLocaleTimeString()} *******`)
+            console.log({ event: "socketError", data })
+        })
+        socket.on("newGroupMessage", data => {
+            console.log(`******* New Event Received at ${new Date().toLocaleTimeString()} *******`)
+            console.log({ event: "newGroupMessage", data })
+        })
+        socket.on("messageRead", data => {
+            console.log(`******* New Event Received at ${new Date().toLocaleTimeString()} *******`)
+            console.log({ event: "messageRead", data })
+        })
+        socket.on("typing", data => {
+            console.log(`******* New Event Received at ${new Date().toLocaleTimeString()} *******`)
+            console.log({ event: "typing", data })
+        })
+    </script>
+</body>
+
+</html>

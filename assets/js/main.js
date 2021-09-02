@@ -21,6 +21,9 @@ let onlineUsers = []
 let isTyping = false;
 let token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiOCIsImlhdCI6MTYyMDY1Mzk3MCwiZXhwIjoxNzA3MDUzOTcwfQ.GScL8tR5GW4_p7LmYub1R61lstBWvZqXTTNlTb_jiws"
 getUsers()
+  .then(u => {
+    console.log({ u })
+  })
   .catch(e => console.log(e))
 // Start Chat
 
@@ -59,7 +62,7 @@ chatForm.addEventListener('submit', (e) => {
   if (chat === "private") {
     // Emit message to server
     socket.emit("newMessage", {
-      to_id, message: msg
+      to_id, message: msg, from_id
     });
   } else {
     socket.emit("newGroupMessage", {
@@ -74,7 +77,7 @@ chatForm.addEventListener('submit', (e) => {
 });
 
 messageInput.addEventListener("input", (e) => {
-  socket.emit("typing", { to_id })
+  socket.emit("typing", { to_id, from_id, room: "9:32" })
 })
 socket.on("typing", data => {
   isTyping = true;
@@ -146,6 +149,7 @@ async function getUsers() {
       goButton.classList.add("danger");
       goButton.setAttribute("onclick", "addUsersToGroupChat()")
       userList.appendChild(goButton);
+      return usersArr
     } else {
       console.log("an error occured fetching users")
     }
